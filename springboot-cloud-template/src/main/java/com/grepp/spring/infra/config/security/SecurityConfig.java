@@ -96,9 +96,6 @@ public class SecurityConfig {
                                   .requestMatchers("/auth/**").permitAll()
                                   .anyRequest().authenticated()
             )
-//            .oauth2Login(oauth -> {
-//                oauth.successHandler(oAuthSuccessHandler);
-//            })
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtExceptionFilter, JwtAuthenticationFilter.class);
         return http.build();
