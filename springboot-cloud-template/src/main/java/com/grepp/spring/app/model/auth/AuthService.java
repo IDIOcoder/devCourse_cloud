@@ -1,19 +1,14 @@
 package com.grepp.spring.app.model.auth;
 
 import com.grepp.spring.app.controller.api.auth.payload.LoginRequest;
-import com.grepp.spring.app.model.auth.token.AccessTokenBlackListRepository;
+import com.grepp.spring.app.model.auth.dto.TokenDto;
 import com.grepp.spring.app.model.auth.token.RefreshTokenService;
 import com.grepp.spring.app.model.auth.token.UserBlackListRepository;
-import com.grepp.spring.app.model.auth.token.entity.TokenBlackList;
-import com.grepp.spring.app.model.auth.dto.TokenDto;
-import com.grepp.spring.app.model.auth.token.RefreshTokenRepository;
 import com.grepp.spring.app.model.auth.token.entity.RefreshToken;
 import com.grepp.spring.infra.auth.jwt.JwtTokenProvider;
 import com.grepp.spring.infra.auth.jwt.dto.AccessTokenDto;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
@@ -25,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Slf4j
 @Transactional(readOnly = true)
-public class AuthService{
+public class AuthService {
     
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final JwtTokenProvider jwtTokenProvider;
@@ -41,12 +36,11 @@ public class AuthService{
         // 인증 실패 시: AuthenticationException 발생
         Authentication authentication = authenticationManagerBuilder.getObject()
                                             .authenticate(authenticationToken);
-        
         SecurityContextHolder.getContext().setAuthentication(authentication);
         return processTokenSignin(authentication.getName());
     }
     
-    public TokenDto processTokenSignin(String email){
+    public TokenDto processTokenSignin(String email) {
         // black list 에 있다면 해제
         userBlackListRepository.deleteById(email);
         
@@ -55,13 +49,13 @@ public class AuthService{
         RefreshToken refreshToken = refreshTokenService.saveWithAtId(accessToken.getJti());
         
         return TokenDto.builder()
-            .accessToken(accessToken.getToken())
-            .atId(accessToken.getJti())
-            .refreshToken(refreshToken.getToken())
-            .grantType("Bearer")
-            .refreshExpiresIn(jwtTokenProvider.getRefreshTokenExpiration())
-            .expiresIn(jwtTokenProvider.getAccessTokenExpiration())
-            .build();
+                   .accessToken(accessToken.getToken())
+                   .atId(accessToken.getJti())
+                   .refreshToken(refreshToken.getToken())
+                   .grantType("Bearer")
+                   .refreshExpiresIn(jwtTokenProvider.getRefreshTokenExpiration())
+                   .expiresIn(jwtTokenProvider.getAccessTokenExpiration())
+                   .build();
     }
-
+    
 }

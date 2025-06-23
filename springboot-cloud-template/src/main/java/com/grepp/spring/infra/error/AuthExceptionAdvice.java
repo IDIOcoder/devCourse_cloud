@@ -10,7 +10,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -34,6 +36,15 @@ public class AuthExceptionAdvice {
     }
     
     @ResponseBody
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ApiResponse<String>> authExHandler(
+        AuthenticationException ex) {
+        return ResponseEntity
+                   .status(HttpStatus.UNAUTHORIZED)
+                   .body(ApiResponse.error(ResponseCode.UNAUTHORIZED));
+    }
+    
+    @ResponseBody
     @ExceptionHandler(AuthWebException.class)
     public String authWebExHandler(AuthWebException ex, HttpServletResponse response)
         throws IOException {
@@ -42,7 +53,7 @@ public class AuthExceptionAdvice {
         properties.put("redirect","/login");
         return render("/error/redirect", properties);
     }
-    
+
     private String render(String templatePath, Map<String, Object> properties){
         Context context = new Context();
         context.setVariables(properties);
