@@ -12,6 +12,9 @@ public class WebConfig implements WebMvcConfigurer {
     @Value("${upload.path}")
     private String uploadPath;
     
+    @Value("${front-server.domain}")
+    private String frontServer;
+    
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/download/**")
@@ -22,7 +25,7 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**") // 모든 경로(/**)에 대해 CORS를 적용
-            .allowedOrigins("http://localhost:3000") // 허용할 Origin (Frontend URL)
+            .allowedOrigins(frontServer) // 허용할 Origin (Frontend URL)
             .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // 허용할 HTTP 메서드
             .allowedHeaders("*") // 모든 헤더 허용
             .allowCredentials(true) // 자격 증명 (쿠키, 인증 헤더 등) 허용

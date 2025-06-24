@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,15 +38,16 @@ public class AuthService {
         Authentication authentication = authenticationManagerBuilder.getObject()
                                             .authenticate(authenticationToken);
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        return processTokenSignin(authentication.getName());
+        String roles =  String.join(",", authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList());
+        return processTokenSignin(authentication.getName(), roles);
     }
     
-    public TokenDto processTokenSignin(String email) {
+    public TokenDto processTokenSignin(String email, String roles) {
         // black list 에 있다면 해제
         userBlackListRepository.deleteById(email);
         
         // 3. 인증 정보를 기반으로 JWT 토큰 생성
-        AccessTokenDto accessToken = jwtTokenProvider.generateAccessToken(email);
+        AccessTokenDto accessToken = jwtTokenProvider.generateAccessToken(email, roles);
         RefreshToken refreshToken = refreshTokenService.saveWithAtId(accessToken.getJti());
         
         return TokenDto.builder()
