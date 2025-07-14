@@ -5,6 +5,7 @@ import static org.springframework.http.HttpMethod.POST;
 
 import com.grepp.spring.app.model.auth.code.AuthToken;
 import com.grepp.spring.app.model.auth.token.entity.RefreshToken;
+import com.grepp.spring.infra.auth.jwt.JwtAuthenticationEntryPoint;
 import com.grepp.spring.infra.auth.jwt.JwtExceptionFilter;
 import com.grepp.spring.infra.auth.jwt.JwtAuthenticationFilter;
 import com.grepp.spring.infra.auth.jwt.JwtTokenProvider;
@@ -48,36 +49,10 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final JwtExceptionFilter jwtExceptionFilter;
     private final OAuthSuccessHandler oAuthSuccessHandler;
-    
-    @Bean
-    public AuthenticationSuccessHandler successHandler(){
-        return new AuthenticationSuccessHandler() {
-            @Override
-            public void onAuthenticationSuccess(HttpServletRequest request,
-                HttpServletResponse response, Authentication authentication)
-                throws IOException, ServletException {
-                
-                boolean isAdmin = authentication.getAuthorities()
-                                      .stream()
-                                      .anyMatch(authority ->
-                                                    authority.getAuthority().equals("ROLE_ADMIN"));
-                
-                if(isAdmin){
-                    response.sendRedirect("/admin");
-                    return;
-                }
-                
-                response.sendRedirect("/");
-            }
-        };
-    }
+    private final JwtAuthenticationEntryPoint entryPoint;
     
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        
-        // * : 1depth 아래 모든 경로
-        // ** : 모든 depth 의 모든 경로
-        // Security Config 에는 인증과 관련된 설정만 지정 (PermitAll or Authenticated)
         http
             .csrf(AbstractHttpConfigurer::disable)
             .formLogin(AbstractHttpConfigurer::disable)
@@ -87,16 +62,19 @@ public class SecurityConfig {
             .logout(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(
                 (requests) -> requests
-                                  .requestMatchers(GET, "/", "/error", "/favicon.ico", "/img/**", "/js/**","/css/**","/download/**").permitAll()
+                                  .requestMatchers(GET, "/", "/error", "/favicon.ico", "/img/**", "/js/**","/css/**").permitAll()
+                                  .requestMatchers("/download/**", "/swagger-ui/**", "/swagger-resources/**", "/v3/api-docs/**", "/webjars/**").permitAll()
                                   .requestMatchers(GET, "/book/list").permitAll()
                                   .requestMatchers(GET, "/api/book/list").permitAll()
                                   .requestMatchers(GET, "/api/member/exists/*").permitAll()
-                                  .requestMatchers(GET, "/member/signup").permitAll()
                                   .requestMatchers("/member/signin", "/member/signup", "/login","/logout").permitAll()
                                   .requestMatchers("/book/**").permitAll()
                                   .requestMatchers("/auth/**").permitAll()
                                   .anyRequest().authenticated()
             )
+            .exceptionHandling(exceptions -> exceptions
+                                                  .authenticationEntryPoint(entryPoint)
+        )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtExceptionFilter, JwtAuthenticationFilter.class);
         return http.build();

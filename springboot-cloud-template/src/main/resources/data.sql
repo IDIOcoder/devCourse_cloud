@@ -1,3 +1,5 @@
+insert into member(user_Id,password,email,tel,created_at,modified_at,activated) values('test','{bcrypt}$2a$10$wpExfAsDJ/5XjVmM7ybfmex6PghsJSY1pN9U8KOE5ps09ZwfNFUSC','test@grepp.com','01000000000',now(),now(),TRUE);
+
 insert into team(id, NAME) values (1000, 'grepp');
 insert into team(id, NAME) values (1001, 'programmers');
 

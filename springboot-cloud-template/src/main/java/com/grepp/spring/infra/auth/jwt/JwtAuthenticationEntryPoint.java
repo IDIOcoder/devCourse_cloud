@@ -1,7 +1,6 @@
 package com.grepp.spring.infra.auth.jwt;
 
 import com.grepp.spring.infra.error.exceptions.AuthApiException;
-import com.grepp.spring.infra.error.exceptions.AuthWebException;
 import com.grepp.spring.infra.response.ResponseCode;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -26,7 +25,9 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
     
     
     private final HandlerExceptionResolver resolver;
-    public JwtAuthenticationEntryPoint(@Qualifier("handlerExceptionResolver") HandlerExceptionResolver resolver) {
+    
+    public JwtAuthenticationEntryPoint(
+        @Qualifier("handlerExceptionResolver") HandlerExceptionResolver resolver) {
         this.resolver = resolver;
     }
     
@@ -36,8 +37,8 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
         
         log.info("request uri : {}", request.getRequestURI());
         
-        ResponseCode responseCode = switch (authException){
-            case BadCredentialsException bce ->{
+        ResponseCode responseCode = switch (authException) {
+            case BadCredentialsException bce -> {
                 log.warn("{}", bce.getMessage());
                 // yield : switch 블록 값을 반환
                 yield ResponseCode.BAD_CREDENTIAL;
@@ -62,12 +63,7 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
             }
         };
         
-        if (request.getRequestURI().startsWith("/api")) {
-            resolver.resolveException(request,
-                response, null, new AuthApiException(responseCode));
-            return;
-        }
-        
-        resolver.resolveException(request, response, null, new AuthWebException(responseCode));
+        resolver.resolveException(request,
+            response, null, new AuthApiException(responseCode));
     }
 }
